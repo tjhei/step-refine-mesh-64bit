@@ -153,7 +153,7 @@ namespace Step40
   public:
     LaplaceProblem();
 
-    void run();
+    void run(unsigned int n_cycles_global, unsigned int n_cycles_adaptive);
 
   private:
     void setup_system();
@@ -603,7 +603,7 @@ namespace Step40
   // on 4 cells (although admittedly the point is only slightly stronger
   // starting on 1024).
   template <int dim>
-  void LaplaceProblem<dim>::run()
+  void LaplaceProblem<dim>::run(unsigned int n_cycles_global, unsigned int n_cycles_adaptive)
   {
     pcout << "Running with "
 #ifdef USE_PETSC_LA
@@ -614,15 +614,14 @@ namespace Step40
           << " on " << Utilities::MPI::n_mpi_processes(mpi_communicator)
           << " MPI rank(s)..." << std::endl;
 
-    const unsigned int n_cycles = 10;
-    for (unsigned int cycle = 0; cycle < n_cycles; ++cycle)
+    for (unsigned int cycle = 0; cycle < n_cycles_adaptive; ++cycle)
       {
-        pcout << "Cycle " << cycle << ':' << std::endl;
+        pcout << "Cycle " << 1+cycle << " / " << n_cycles_adaptive << ':' << std::endl;
 
         if (cycle == 0)
           {
             GridGenerator::subdivided_hyper_cube(triangulation, 10);
-            triangulation.refine_global(5);
+            triangulation.refine_global(n_cycles_global);
           }
         else
           refine_grid();
@@ -680,6 +679,14 @@ namespace Step40
 // should exit since MPI will no longer be available.
 int main(int argc, char *argv[])
 {
+     if (argc!=3)
+    {
+        std::cout << "usage: n_cycles_global n_cycles_adaptive" << std::endl;
+        return 1;
+    }
+    unsigned int n_cycles_global = dealii::Utilities::string_to_int(argv[1]);
+    unsigned int n_cycles_adaptive = dealii::Utilities::string_to_int(argv[2]);
+
   try
     {
       using namespace dealii;
@@ -688,7 +695,7 @@ int main(int argc, char *argv[])
       Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
       LaplaceProblem<2> laplace_problem_2d;
-      laplace_problem_2d.run();
+      laplace_problem_2d.run(n_cycles_global, n_cycles_adaptive);
     }
   catch (std::exception &exc)
     {
