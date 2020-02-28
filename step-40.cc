@@ -634,6 +634,7 @@ namespace Step40
 	      << " ghost_owners.size: " << triangulation.ghost_owners().size()
 	      << " level_ghost_owners.size: " << triangulation.level_ghost_owners().size()
 	      << " workload_imbalance: " << imbalance
+	      << " memory-tria/mb: " << triangulation.memory_consumption()/1024/1024
 	      << std::endl;
         dealii::Utilities::System::MemoryStats stats;
         dealii::Utilities::System::get_memory_stats(stats);
