@@ -118,6 +118,9 @@ namespace LA
 #include <fstream>
 #include <iostream>
 
+bool fixed_number = true;
+
+
 namespace Step40
 {
   using namespace dealii;
@@ -523,9 +526,13 @@ namespace Step40
 	      = cell->center().norm() * std::pow(cell->diameter(), 0.5);
     }
 
-    parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
-                triangulation, estimated_error_per_cell, 0.10, 0.0);
-
+    if (!fixed_number)
+      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+	triangulation, estimated_error_per_cell, 0.10, 0.0);
+    else
+      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+	triangulation, estimated_error_per_cell, 0.20, 0.0);
+    
     triangulation.execute_coarsening_and_refinement();
   }
 
@@ -613,6 +620,12 @@ namespace Step40
 #endif
           << " on " << Utilities::MPI::n_mpi_processes(mpi_communicator)
           << " MPI rank(s)..." << std::endl;
+    
+    if (fixed_number)
+      pcout << "using refine_and_coarsen_fixed_number" << std::endl;
+    else
+      pcout << "using refine_and_coarsen_fixed_fraction" << std::endl;
+    
 
     for (unsigned int cycle = 0; cycle < n_cycles_adaptive; ++cycle)
       {
@@ -680,13 +693,14 @@ namespace Step40
 // should exit since MPI will no longer be available.
 int main(int argc, char *argv[])
 {
-     if (argc!=3)
+     if (argc!=4)
     {
-        std::cout << "usage: n_cycles_global n_cycles_adaptive" << std::endl;
+        std::cout << "usage: n_cycles_global n_cycles_adaptive fixed_number" << std::endl;
         return 1;
     }
     unsigned int n_cycles_global = dealii::Utilities::string_to_int(argv[1]);
     unsigned int n_cycles_adaptive = dealii::Utilities::string_to_int(argv[2]);
+    fixed_number = dealii::Utilities::string_to_int(argv[3]) != 0;
 
   try
     {
