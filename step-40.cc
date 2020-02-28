@@ -520,7 +520,7 @@ namespace Step40
     {
         if (cell->is_locally_owned())
             estimated_error_per_cell(cell->active_cell_index())
-	      = cell->center().norm() * cell->diameter();
+	      = cell->center().norm() * std::pow(cell->diameter(), 0.5);
     }
 
     parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
